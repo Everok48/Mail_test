@@ -2,7 +2,7 @@
   <div class="big-box">
     <div class="top-row">
       <h1 class="main-title">Черновики</h1>
-      <q-btn class="green-btn" label="Создать черновик" to="/compose" />
+      <q-btn class="green-btn" label="Создать черновик" to="/create" />
     </div>
     <div class="search-row">
       <q-input class="search-inp" filled dense placeholder="Поиск по черновикам..." />

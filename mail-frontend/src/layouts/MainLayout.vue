@@ -38,7 +38,7 @@
           </q-item-section>
         </q-item>
 
-        <q-item to="/compose" clickable>
+        <q-item to="/create" clickable>
           <q-item-section>
             <q-icon name="edit" />
           </q-item-section>

@@ -2,7 +2,7 @@
   <div class="big-box">
     <div class="top-row">
       <h1 class="main-title">Отправленные</h1>
-      <q-btn class="green-btn" label="Отправить письмо" to="/compose" />
+      <q-btn class="green-btn" label="Отправить письмо" to="/create" />
     </div>
     <div class="search-row">
       <q-input class="search-inp" filled dense placeholder="Поиск по отправленным..." />

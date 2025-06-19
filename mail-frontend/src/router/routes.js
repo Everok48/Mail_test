@@ -14,7 +14,7 @@ const routes = [
       { path: 'drafts', name: 'drafts', component: DraftsPage },
       { path: 'sent', name: 'sent', component: SentPage },
       { path: 'mail/:id', name: 'mail-view', component: MailViewPage },
-      { path: 'compose', name: 'create-mail', component: CreateMailPage }
+      { path: 'create', name: 'create-mail', component: CreateMailPage }
     ]
   },
   {
