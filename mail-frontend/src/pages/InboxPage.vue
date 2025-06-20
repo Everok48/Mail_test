@@ -6,73 +6,53 @@
       <q-btn class="green-btn" label="Отправить письмо" to="/create" />
     </div>
     <div class="search-row">
-      <q-input class="search-inp" filled dense placeholder="Поиск по письмам..." @click="filtere" />
+      <q-input
+        class="search-inp"
+        filled
+        dense
+        placeholder="Поиск по письмам..."
+        v-model="searchText"
+      />
     </div>
     <q-table
-      :rows="filteredEmails"
+      :rows="filteredMails"
       :columns="columns"
       class="big-table"
       hide-bottom
-      @row-click="rowClick"
+      row-key="id"
+      :rows-per-page="10"
+      @row-click="openMail"
     />
+    <q-dialog v-model="dialogOpen">
+      <MailDialog v-if="selectedMail" :mail="selectedMail" />
+    </q-dialog>
   </div>
 </template>
 
 <script setup>
-  import { ref, onMounted, computed } from 'vue'
-  import { api } from 'src/boot/axios'
-  import { useRouter } from 'vue-router'
+  import { ref } from 'vue'
   import { useQuasar } from 'quasar'
-
-  const mails = ref([])
-  const searchText = ref('')
-  const router = useRouter()
-  const $q = useQuasar()
+  import { useMailTable } from 'src/composables/useMailTable'
+  import MailDialog from 'components/MailDialog.vue'
+  import { formatDate } from 'src/composables/useDateFormat'
 
   const columns = [
-    { name: 'fromEmail', label: 'От кого', align: 'left', field: 'from' },
+    { name: 'fromEmail', label: 'От кого', align: 'left', field: 'fromEmail' },
     { name: 'subject', label: 'Тема', align: 'left', field: 'subject' },
-    { name: 'date', label: 'Дата', align: 'left', field: 'date' },
+    { name: 'date', label: 'Дата', align: 'left', field: 'date', format: val => formatDate(val) },
     { name: 'body', label: 'Текст письма', align: 'left', field: 'body' },
   ]
 
-  const filteredEmails = computed(() => {
-    if (!searchText.value) return mails.value
-    const search = searchText.value.toLowerCase()
-    return mails.value.filter(
-      mail =>
-        mail.fromEmail?.toLowerCase().includes(search) ||
-        mail.subject?.toLowerCase().includes(search) ||
-        mail.body?.toLowerCase().includes(search)
-    )
-  })
+  const { searchText, filteredMails, loadMails } = useMailTable('/mails/inbox')
 
-  async function loadMails() {
-    try {
-      const response = await api.get('/mails/inbox')
-      mails.value = response.data
-    } catch (error) {
-      $q.notify({
-        type: 'negative',
-        position: 'top',
-        message: 'Не удалось загрузить письма',
-        caption: error.response?.data?.message || error.message,
-        icon: 'warning',
-        timeout: 3000,
-        actions: [{ icon: 'close', color: 'white' }],
-      })
-    }
+  const $q = useQuasar()
+  const dialogOpen = ref(false)
+  const selectedMail = ref(null)
+
+  function openMail(evt, row) {
+    selectedMail.value = row
+    dialogOpen.value = true
   }
-
-  function rowClick(e, row) {
-    if (row?.id) {
-      router.push('/mail' + row.id)
-    }
-  }
-
-  onMounted(() => {
-    loadMails()
-  })
 </script>
 
 <style scoped>
@@ -113,5 +93,9 @@
     margin-top: 20px;
     border-radius: 8px;
     overflow: hidden;
+  }
+  /* Делаем строки таблицы кликабельными */
+  .big-table .q-tr {
+    cursor: pointer;
   }
 </style>

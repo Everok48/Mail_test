@@ -68,12 +68,14 @@
     date: '',
     isDraft: false,
     isSent: false,
+    type: 'inbox',
   })
 
   async function sendMail() {
     try {
       mail.value.isDraft = false
       mail.value.isSent = true
+      mail.value.type = 'sent'
       mail.value.date = new Date().toISOString()
       await api.post('/mails', mail.value)
       router.push('/sent')
@@ -94,6 +96,7 @@
     try {
       mail.value.isDraft = true
       mail.value.isSent = false
+      mail.value.type = 'draft'
       mail.value.date = new Date().toISOString()
       await api.post('/mails', mail.value)
       router.push('/drafts')

@@ -19,7 +19,8 @@ export class MailService implements OnModuleInit {
         body TEXT,
         date TEXT,
         isDraft INTEGER DEFAULT 0,
-        isSent INTEGER DEFAULT 0
+        isSent INTEGER DEFAULT 0,
+        type TEXT
       )
     `,
       )
@@ -28,23 +29,19 @@ export class MailService implements OnModuleInit {
 
   getInbox(): any[] {
     return this.db
-      .prepare(
-        `SELECT * FROM mail WHERE isSent = 1 AND isDraft = 0 ORDER BY date DESC`,
-      )
+      .prepare(`SELECT * FROM mail WHERE type = 'inbox' ORDER BY date DESC`)
       .all();
   }
 
   getSent(): any[] {
     return this.db
-      .prepare(
-        `SELECT * FROM mail WHERE isSent = 1 AND isDraft = 0 ORDER BY date DESC`,
-      )
+      .prepare(`SELECT * FROM mail WHERE type = 'sent' ORDER BY date DESC`)
       .all();
   }
 
   getDrafts(): any[] {
     return this.db
-      .prepare(`SELECT * FROM mail WHERE isDraft = 1 ORDER BY date DESC`)
+      .prepare(`SELECT * FROM mail WHERE type = 'draft' ORDER BY date DESC`)
       .all();
   }
 
@@ -54,7 +51,7 @@ export class MailService implements OnModuleInit {
 
   create(mail: any): any {
     const stmt = this.db.prepare(
-      `INSERT INTO mail (fromEmail, toEmail, subject, body, date, isDraft, isSent) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO mail (fromEmail, toEmail, subject, body, date, isDraft, isSent, type) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     );
     const info = stmt.run(
       mail.fromEmail,
@@ -64,13 +61,14 @@ export class MailService implements OnModuleInit {
       mail.date || new Date().toISOString(),
       mail.isDraft ? 1 : 0,
       mail.isSent ? 1 : 0,
+      mail.type || 'inbox',
     );
     return { id: info.lastInsertRowid, ...mail };
   }
 
   update(id: number, mail: any): any {
     const stmt = this.db.prepare(
-      `UPDATE mail SET fromEmail = ?, toEmail = ?, subject = ?, body = ?, date = ?, isDraft = ?, isSent = ? WHERE id = ?`,
+      `UPDATE mail SET fromEmail = ?, toEmail = ?, subject = ?, body = ?, date = ?, isDraft = ?, isSent = ?, type = ? WHERE id = ?`,
     );
     stmt.run(
       mail.fromEmail,
@@ -80,6 +78,7 @@ export class MailService implements OnModuleInit {
       mail.date || new Date().toISOString(),
       mail.isDraft ? 1 : 0,
       mail.isSent ? 1 : 0,
+      mail.type || 'inbox',
       id,
     );
     return { id, ...mail };
