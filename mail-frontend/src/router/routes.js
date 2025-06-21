@@ -1,7 +1,6 @@
 import InboxPage from 'pages/InboxPage.vue'
 import DraftsPage from 'pages/DraftsPage.vue'
 import SentPage from 'pages/SentPage.vue'
-import MailViewPage from 'pages/MailViewPage.vue'
 import CreateMailPage from 'pages/CreateMailPage.vue'
 
 const routes = [
@@ -13,14 +12,13 @@ const routes = [
       { path: 'inbox', redirect: { name: 'inbox' } },
       { path: 'drafts', name: 'drafts', component: DraftsPage },
       { path: 'sent', name: 'sent', component: SentPage },
-      { path: 'mail/:id', name: 'mail-view', component: MailViewPage },
-      { path: 'create', name: 'create-mail', component: CreateMailPage }
-    ]
+      { path: 'create', name: 'create-mail', component: CreateMailPage },
+    ],
   },
   {
     path: '/:catchAll(.*)*',
-    component: () => import('pages/ErrorNotFound.vue')
-  }
+    component: () => import('pages/ErrorNotFound.vue'),
+  },
 ]
 
 export default routes

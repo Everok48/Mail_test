@@ -12,9 +12,9 @@ export function useMailTable(endpoint) {
     const search = searchText.value.toLowerCase()
     return mails.value.filter(
       mail =>
+        mail.fromEmail?.toLowerCase().includes(search) ||
         mail.toEmail?.toLowerCase().includes(search) ||
-        mail.subject?.toLowerCase().includes(search) ||
-        mail.body?.toLowerCase().includes(search)
+        mail.subject?.toLowerCase().includes(search)
     )
   })
 

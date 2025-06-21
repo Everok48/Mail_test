@@ -1,35 +1,61 @@
 <template>
-  <div class="big-box">
-    <div class="top-row">
-      <h1 class="main-title">Отправленные</h1>
-      <q-btn class="green-btn" label="Отправить письмо" to="/create" />
+  <q-page padding>
+    <div class="row items-center justify-between q-mb-md">
+      <h1 class="text-h5">Отправленные</h1>
+      <q-btn icon="add" label="Новое письмо" color="primary" to="/create" />
     </div>
-    <div class="search-row">
-      <q-input
-        class="search-inp"
-        filled
-        dense
-        placeholder="Поиск по отправленным..."
-        v-model="searchText"
-      />
-    </div>
-    <q-table
-      :rows="filteredMails"
-      :columns="columns"
-      class="big-table"
-      hide-bottom
-      row-key="id"
-      :rows-per-page="0"
-      @row-click="openMail"
-    />
+
+    <q-card flat bordered>
+      <q-card-section class="row items-center q-pb-none">
+        <q-input
+          outlined
+          dense
+          debounce="300"
+          v-model="searchText"
+          placeholder="Поиск..."
+          class="col"
+        >
+          <template v-slot:append>
+            <q-icon name="search" />
+          </template>
+        </q-input>
+      </q-card-section>
+
+      <q-table
+        :rows="filteredMails"
+        :columns="columns"
+        row-key="id"
+        flat
+        class="q-mt-md"
+        :rows-per-page-options="[10, 20, 50]"
+        @row-click="openMail"
+      >
+        <template v-slot:body-cell-subject="props">
+          <q-td :props="props" class="cursor-pointer">
+            <span class="text-weight-bold">{{ props.row.subject }}</span>
+            <div class="text-grey-7 ellipsis">{{ props.row.body }}</div>
+          </q-td>
+        </template>
+
+        <template v-slot:no-data>
+          <div class="full-width row flex-center text-grey q-gutter-sm q-py-lg">
+            <q-icon size="2em" name="send" />
+            <span>Вы еще не отправляли писем</span>
+          </div>
+        </template>
+      </q-table>
+    </q-card>
+
     <q-dialog v-model="dialogOpen">
-      <MailDialog v-if="selectedMail" :mail="selectedMail" />
+      <MailDialog v-if="selectedMail" :mail="selectedMail" @delete="handleDelete" />
     </q-dialog>
-  </div>
+  </q-page>
 </template>
 
 <script setup>
   import { ref } from 'vue'
+  import { api } from 'src/boot/axios'
+  import { useQuasar } from 'quasar'
   import { useMailTable } from 'src/composables/useMailTable'
   import MailDialog from 'components/MailDialog.vue'
   import { formatDate } from 'src/composables/useDateFormat'
@@ -41,8 +67,9 @@
     { name: 'body', label: 'Текст письма', align: 'left', field: 'body' },
   ]
 
-  const { searchText, filteredMails } = useMailTable('/mails/sent')
+  const { searchText, filteredMails, loadMails } = useMailTable('/mails/sent')
 
+  const $q = useQuasar()
   const dialogOpen = ref(false)
   const selectedMail = ref(null)
 
@@ -50,42 +77,37 @@
     selectedMail.value = row
     dialogOpen.value = true
   }
+
+  async function handleDelete(id) {
+    try {
+      await api.delete(`/mails/${id}`)
+      dialogOpen.value = false
+      loadMails()
+      $q.notify({
+        type: 'positive',
+        position: 'top',
+        message: 'Письмо удалено',
+        icon: 'delete',
+        timeout: 2000,
+      })
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        position: 'top',
+        message: 'Не удалось удалить письмо',
+        caption: error.response?.data?.message || error.message,
+        icon: 'warning',
+        timeout: 3000,
+      })
+    }
+  }
 </script>
 
-<style scoped>
-  .big-box {
-    max-width: 1100px;
-    margin: 0 auto;
-    background: #fff;
-    border-radius: 10px;
-    padding: 20px;
-  }
-  .top-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
-  .main-title {
-    font-size: 22px;
-    margin-right: 20px;
-  }
-  .green-btn {
-    background: #43a047;
-    color: #fff;
-    border-radius: 5px;
-  }
-  .search-row {
-    margin: 16px 0;
-  }
-  .search-inp {
-    width: 250px;
-  }
-  .big-table {
-    margin-top: 20px;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-  .big-table .q-tr {
+<style>
+  .q-table tbody tr {
     cursor: pointer;
+  }
+  .q-table tbody tr:hover {
+    background-color: #f5f5f5;
   }
 </style>

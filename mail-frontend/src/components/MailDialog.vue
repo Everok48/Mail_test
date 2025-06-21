@@ -13,19 +13,23 @@
       </div>
     </q-card-section>
     <q-card-actions align="right">
-      <q-btn flat label="Закрыть" color="primary" v-close-popup />
+      <q-btn flat label="Удалить" color="negative" @click="$emit('delete', mail.id)" />
+      <q-btn flat label="Назад" color="primary" v-close-popup />
     </q-card-actions>
   </q-card>
 </template>
 
 <script setup>
   import { formatDate } from 'src/composables/useDateFormat'
+
   defineProps({
     mail: {
       type: Object,
       required: true,
     },
   })
+
+  defineEmits(['delete'])
 </script>
 
 <style scoped>
