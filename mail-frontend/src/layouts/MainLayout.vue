@@ -44,7 +44,6 @@
     </q-page-container>
     <q-footer class="footer-box">
       <div class="footer-content">
-        <q-icon name="mail" class="footer-icon" />
         <span>Medsoft Test &copy; 2025</span>
       </div>
     </q-footer>
@@ -74,7 +73,7 @@
   }
   .footer-box {
     background: #1976d2;
-    color: #fff;
+    color: white;
     padding: 0;
     min-height: 48px;
     display: flex;
@@ -87,7 +86,7 @@
     max-width: 1100px;
     margin: 0 auto;
     display: flex;
-    align-items: center;
+    align-items: right;
     justify-content: space-between;
     padding: 0 24px;
     font-size: 15px;

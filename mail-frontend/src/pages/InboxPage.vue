@@ -1,96 +1,118 @@
 <template>
   <q-page padding>
-    <div class="row items-center justify-between q-mb-md">
-      <h1 class="text-h5">Входящие</h1>
-      <div class="row q-gutter-sm">
-        <q-btn icon="refresh" label="Обновить" color="secondary" outline @click="loadMails" />
-        <q-btn icon="add" label="Новое письмо" color="primary" to="/create" />
-      </div>
-    </div>
-
-    <q-card flat bordered>
-      <q-card-section class="row items-center q-pb-none">
-        <q-input
-          outlined
-          dense
-          debounce="300"
-          v-model="searchText"
-          placeholder="Поиск..."
-          class="col"
-        >
-          <template v-slot:append>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-      </q-card-section>
-
-      <q-table
+    <div class="q-pa-md">
+      <q-btn
+        icon="refresh"
+        label="Получить новые письма"
+        color="primary"
+        @click="loadMails"
+        class="q-mb-md"
+      />
+      <MailTable
+        v-model="searchQuery"
         :rows="filteredMails"
         :columns="columns"
-        row-key="id"
-        flat
-        class="q-mt-md"
-        :rows-per-page-options="[10, 20, 50]"
-        @row-click="openMail"
+        :loading="isLoading"
+        :noDataIcon="'inbox'"
+        :noDataText="'Входящих писем пока нет'"
+        :onRowClick="openMail"
       >
-        <template v-slot:body-cell-subject="props">
+        <template #body-cell-subject="props">
           <q-td :props="props" class="cursor-pointer">
             <span class="text-weight-bold">{{ props.row.subject }}</span>
             <div class="text-grey-7 ellipsis">{{ props.row.body }}</div>
           </q-td>
         </template>
+      </MailTable>
 
-        <template v-slot:no-data>
-          <div class="full-width row flex-center text-grey q-gutter-sm q-py-lg">
-            <q-icon size="2em" name="inbox" />
-            <span>Писем пока нет</span>
-          </div>
+      <div v-if="isLoading" class="text-center q-pa-md">
+        <q-spinner color="primary" size="3em" />
+      </div>
+
+      <q-banner v-if="error" class="bg-negative text-white">
+        {{ error }}
+        <template v-slot:action>
+          <q-btn flat color="white" label="Повторить" @click="loadMails" />
         </template>
-      </q-table>
-    </q-card>
+      </q-banner>
+    </div>
 
-    <q-dialog v-model="dialogOpen">
-      <MailDialog v-if="selectedMail" :mail="selectedMail" @delete="handleDelete" />
-    </q-dialog>
+    <mail-dialog
+      v-if="currentMail"
+      v-model="showMailDialog"
+      :mail="currentMail"
+      @delete="handleDelete"
+      @close="closeMailDialog"
+    />
   </q-page>
 </template>
 
 <script setup>
-  import { ref } from 'vue'
-  import { api } from 'src/boot/axios'
-  import { useQuasar } from 'quasar'
-  import { useMailTable } from 'src/composables/useMailTable'
-  import MailDialog from 'components/MailDialog.vue'
+  import { ref, onMounted, computed } from 'vue'
+  import { useMailStore } from 'src/stores/mail-store'
+  import { storeToRefs } from 'pinia'
   import { formatDate } from 'src/composables/useDateFormat'
+  import MailDialog from 'src/components/MailDialog.vue'
+  import MailTable from 'src/components/MailTable.vue'
+  import { useQuasar } from 'quasar'
+
+  const mailStore = useMailStore()
+  const { isLoading, error } = storeToRefs(mailStore)
+  const showMailDialog = ref(false)
+  const currentMail = ref(null)
+  const $q = useQuasar()
 
   const columns = [
-    { name: 'fromEmail', label: 'От кого', align: 'left', field: 'fromEmail' },
+    { name: 'from', label: 'Отправитель', align: 'left', field: 'from' },
     { name: 'subject', label: 'Тема', align: 'left', field: 'subject' },
     { name: 'date', label: 'Дата', align: 'left', field: 'date', format: val => formatDate(val) },
-    { name: 'body', label: 'Текст письма', align: 'left', field: 'body' },
   ]
 
-  const { searchText, filteredMails, loadMails } = useMailTable('/mails/inbox')
+  const searchQuery = computed({
+    get: () => mailStore.filters.searchQuery,
+    set: value => mailStore.updateFilters({ searchQuery: value }),
+  })
 
-  const $q = useQuasar()
-  const dialogOpen = ref(false)
-  const selectedMail = ref(null)
+  const filteredMails = computed(() => mailStore.filteredMailsByType('inbox'))
 
-  function openMail(evt, row) {
-    selectedMail.value = row
-    dialogOpen.value = true
+  const loadMails = async () => {
+    try {
+      await mailStore.fetchMails('inbox')
+      $q.notify({
+        type: 'positive',
+        position: 'top',
+        message: 'Письма успешно загружены',
+        timeout: 2000,
+      })
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        position: 'top',
+        message: 'Не удалось загрузить письма',
+        caption: error.message,
+        timeout: 3000,
+      })
+    }
+  }
+
+  const openMail = (evt, mail) => {
+    currentMail.value = mail
+    showMailDialog.value = true
+  }
+
+  const closeMailDialog = () => {
+    showMailDialog.value = false
+    currentMail.value = null
   }
 
   async function handleDelete(id) {
     try {
-      await api.delete(`/mails/${id}`)
-      dialogOpen.value = false
-      loadMails()
+      await mailStore.deleteMail(id, 'inbox')
+      showMailDialog.value = false
       $q.notify({
         type: 'positive',
         position: 'top',
         message: 'Письмо удалено',
-        icon: 'delete',
         timeout: 2000,
       })
     } catch (error) {
@@ -98,12 +120,13 @@
         type: 'negative',
         position: 'top',
         message: 'Не удалось удалить письмо',
-        caption: error.response?.data?.message || error.message,
-        icon: 'warning',
+        caption: error.message,
         timeout: 3000,
       })
     }
   }
+
+  onMounted(loadMails)
 </script>
 
 <style>

@@ -4,7 +4,7 @@
       <h1 class="text-h5 q-mb-md">Новое письмо</h1>
       <q-card flat bordered class="q-pa-md">
         <q-form @submit.prevent="sendMail">
-          <q-input outlined v-model="mail.fromEmail" label="От кого" class="q-mb-md">
+          <q-input outlined v-model="mail.fromEmail" label="От кого" class="q-mb-md" clearable>
             <template v-slot:prepend>
               <q-icon name="person" />
             </template>
@@ -50,59 +50,65 @@
 
 <script setup>
   import { ref } from 'vue'
-  import { api } from 'src/boot/axios'
   import { useRouter } from 'vue-router'
+  import { useMailStore } from 'src/stores/mail-store'
+  import { useQuasar } from 'quasar'
 
   const router = useRouter()
+  const mailStore = useMailStore()
+  const $q = useQuasar()
+
   const mail = ref({
     fromEmail: '',
     toEmail: '',
     subject: '',
     body: '',
     date: '',
-    isDraft: false,
-    isSent: false,
-    type: 'inbox',
+    type: 'draft',
   })
 
   async function sendMail() {
     try {
-      mail.value.isDraft = false
-      mail.value.isSent = true
-      mail.value.type = 'sent'
       mail.value.date = new Date().toISOString()
-      await api.post('/mails', mail.value)
+      mail.value.type = 'sent'
+      await mailStore.sendMail(mail.value)
+      $q.notify({
+        type: 'positive',
+        position: 'top',
+        message: 'Письмо успешно отправлено',
+        timeout: 2000,
+      })
       router.push('/sent')
     } catch (error) {
       $q.notify({
         type: 'negative',
         position: 'top',
-        message: 'Не удалось отправить письма',
-        caption: error.response?.data?.message || error.message,
-        icon: 'warning',
+        message: 'Не удалось отправить письмо',
+        caption: error.message,
         timeout: 3000,
-        actions: [{ icon: 'close', color: 'white' }],
       })
     }
   }
 
   async function saveDraft() {
     try {
-      mail.value.isDraft = true
-      mail.value.isSent = false
-      mail.value.type = 'draft'
       mail.value.date = new Date().toISOString()
-      await api.post('/mails', mail.value)
+      mail.value.type = 'draft'
+      await mailStore.saveDraft(mail.value)
+      $q.notify({
+        type: 'positive',
+        position: 'top',
+        message: 'Черновик успешно сохранен',
+        timeout: 2000,
+      })
       router.push('/drafts')
     } catch (error) {
       $q.notify({
         type: 'negative',
         position: 'top',
         message: 'Не удалось сохранить черновик',
-        caption: error.response?.data?.message || error.message,
-        icon: 'warning',
+        caption: error.message,
         timeout: 3000,
-        actions: [{ icon: 'close', color: 'white' }],
       })
     }
   }

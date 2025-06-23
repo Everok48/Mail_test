@@ -1,27 +1,20 @@
 /* eslint-env node */
-const { configure } = require('quasar/wrappers');
+const { configure } = require('quasar/wrappers')
 
 module.exports = configure(function (/* ctx */) {
   return {
-    css: [
-      'app.scss'
-    ],
-    boot: [
-      'axios'
-    ],
-    extras: [
-      'roboto-font',
-      'material-icons'
-    ],
+    css: ['app.scss'],
+    boot: ['axios'],
+    extras: ['roboto-font', 'material-icons'],
     build: {
-      vueRouterMode: 'hash'
+      vueRouterMode: 'hash',
     },
     devServer: {
-      open: true
+      open: true,
     },
     framework: {
       config: {},
-      plugins: []
-    }
+      plugins: ['Notify'],
+    },
   }
-});
+})

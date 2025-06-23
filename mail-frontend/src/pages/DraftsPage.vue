@@ -5,46 +5,22 @@
       <q-btn icon="add" label="Новый черновик" color="primary" to="/create" />
     </div>
 
-    <q-card flat bordered>
-      <q-card-section class="row items-center q-pb-none">
-        <q-input
-          outlined
-          dense
-          debounce="300"
-          v-model="searchText"
-          placeholder="Поиск..."
-          class="col"
-        >
-          <template v-slot:append>
-            <q-icon name="search" />
-          </template>
-        </q-input>
-      </q-card-section>
-
-      <q-table
-        :rows="filteredMails"
-        :columns="columns"
-        row-key="id"
-        flat
-        class="q-mt-md"
-        :rows-per-page-options="[10, 20, 50]"
-        @row-click="openMail"
-      >
-        <template v-slot:body-cell-subject="props">
-          <q-td :props="props" class="cursor-pointer">
-            <span class="text-weight-bold">{{ props.row.subject }}</span>
-            <div class="text-grey-7 ellipsis">{{ props.row.body }}</div>
-          </q-td>
-        </template>
-
-        <template v-slot:no-data>
-          <div class="full-width row flex-center text-grey q-gutter-sm q-py-lg">
-            <q-icon size="2em" name="drafts" />
-            <span>Черновиков пока нет</span>
-          </div>
-        </template>
-      </q-table>
-    </q-card>
+    <MailTable
+      v-model="searchText"
+      :rows="filteredMails"
+      :columns="columns"
+      :loading="isLoading"
+      :noDataIcon="'drafts'"
+      :noDataText="'Черновиков пока нет'"
+      :onRowClick="openMail"
+    >
+      <template #body-cell-subject="props">
+        <q-td :props="props" class="cursor-pointer">
+          <span class="text-weight-bold">{{ props.row.subject }}</span>
+          <div class="text-grey-7 ellipsis">{{ props.row.body }}</div>
+        </q-td>
+      </template>
+    </MailTable>
 
     <q-dialog v-model="dialogOpen">
       <MailDialog v-if="selectedMail" :mail="selectedMail" @delete="handleDelete" />
@@ -53,12 +29,19 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue'
-  import { api } from 'src/boot/axios'
-  import { useQuasar } from 'quasar'
-  import { useMailTable } from 'src/composables/useMailTable'
+  import { ref, onMounted, computed } from 'vue'
+  import { useMailStore } from 'src/stores/mail-store'
+  import { storeToRefs } from 'pinia'
   import MailDialog from 'components/MailDialog.vue'
   import { formatDate } from 'src/composables/useDateFormat'
+  import MailTable from 'components/MailTable.vue'
+  import { useQuasar } from 'quasar'
+
+  const mailStore = useMailStore()
+  const { isLoading } = storeToRefs(mailStore)
+  const dialogOpen = ref(false)
+  const selectedMail = ref(null)
+  const $q = useQuasar()
 
   const columns = [
     { name: 'toEmail', label: 'Кому', align: 'left', field: 'toEmail' },
@@ -66,11 +49,26 @@
     { name: 'date', label: 'Дата', align: 'left', field: 'date', format: val => formatDate(val) },
   ]
 
-  const { searchText, filteredMails, loadMails } = useMailTable('/mails/drafts')
+  const searchText = computed({
+    get: () => mailStore.filters.searchQuery,
+    set: value => mailStore.updateFilters({ searchQuery: value }),
+  })
 
-  const $q = useQuasar()
-  const dialogOpen = ref(false)
-  const selectedMail = ref(null)
+  const filteredMails = computed(() => mailStore.filteredMailsByType('drafts'))
+
+  onMounted(async () => {
+    try {
+      await mailStore.fetchMails('drafts')
+    } catch (error) {
+      $q.notify({
+        type: 'negative',
+        position: 'top',
+        message: 'Не удалось загрузить черновики',
+        caption: error.message,
+        timeout: 3000,
+      })
+    }
+  })
 
   function openMail(evt, row) {
     selectedMail.value = row
@@ -79,14 +77,12 @@
 
   async function handleDelete(id) {
     try {
-      await api.delete(`/mails/${id}`)
+      await mailStore.deleteMail(id, 'drafts')
       dialogOpen.value = false
-      loadMails() // Обновляем список писем
       $q.notify({
         type: 'positive',
         position: 'top',
         message: 'Черновик удален',
-        icon: 'delete',
         timeout: 2000,
       })
     } catch (error) {
@@ -94,8 +90,7 @@
         type: 'negative',
         position: 'top',
         message: 'Не удалось удалить черновик',
-        caption: error.response?.data?.message || error.message,
-        icon: 'warning',
+        caption: error.message,
         timeout: 3000,
       })
     }
