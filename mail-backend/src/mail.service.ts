@@ -1,5 +1,7 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import type { Database } from 'better-sqlite3';
+import { faker } from '@faker-js/faker';
+import * as path from 'path';
 import {
   MailEntity,
   CreateMailDto,
@@ -12,27 +14,81 @@ const DatabaseLib = require('better-sqlite3');
 @Injectable()
 export class MailService implements OnModuleInit {
   private db!: Database;
+  private readonly createTableStmt: string = `
+    CREATE TABLE IF NOT EXISTS mail (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      fromEmail TEXT,
+      toEmail TEXT,
+      subject TEXT,
+      body TEXT,
+      date TEXT,
+      type TEXT
+    )
+  `;
 
-  onModuleInit() {
-    this.db = new DatabaseLib('mail.db');
-    this.db
-      .prepare(
-        `
-      CREATE TABLE IF NOT EXISTS mail (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        fromEmail TEXT,
-        toEmail TEXT,
-        subject TEXT,
-        body TEXT,
-        date TEXT,
-        type TEXT
-      )
-    `,
-      )
-      .run();
+  constructor() {
+    const dbPath = path.join(__dirname, '..', 'mail.db');
+    this.db = new DatabaseLib(dbPath);
+    this.db.exec(this.createTableStmt);
+  }
+
+  onModuleInit() {}
+
+  seed() {
+    try {
+      console.log('[SEED] Starting database seeding...');
+      this.db.exec(this.createTableStmt);
+      console.log('[SEED] Table ensured to exist.');
+
+      const insertStmt = this.db.prepare(
+        `INSERT INTO mail (fromEmail, toEmail, subject, body, date, type) VALUES (?, ?, ?, ?, ?, ?)`,
+      );
+
+      const seedTransaction = this.db.transaction(() => {
+        const deleteInfo = this.db.prepare(`DELETE FROM mail`).run();
+        console.log(`[SEED] Deleted ${deleteInfo.changes} existing rows.`);
+
+        let insertedCount = 0;
+        const runInsert = (type, body = faker.lorem.paragraphs()) => {
+          const from =
+            type === MailType.SENT ? 'me@example.com' : faker.internet.email();
+          const to =
+            type === MailType.SENT ? faker.internet.email() : 'me@example.com';
+          const info = insertStmt.run(
+            from,
+            to,
+            faker.lorem.sentence(),
+            body,
+            faker.date.recent().toISOString(),
+            type,
+          );
+          if (info.changes > 0) insertedCount++;
+        };
+
+        for (let i = 0; i < 15; i++) runInsert(MailType.INBOX);
+        for (let i = 0; i < 10; i++) runInsert(MailType.SENT);
+        for (let i = 0; i < 5; i++) runInsert(MailType.DRAFT, '');
+
+        console.log(
+          `[SEED] Attempted to insert 30 rows. Successful inserts: ${insertedCount}`,
+        );
+      });
+
+      seedTransaction();
+
+      console.log('[SEED] Seeding transaction completed.');
+      return {
+        message:
+          'Database seeding process finished. Check server console for details.',
+      };
+    } catch (error) {
+      console.error('[SEED] CRITICAL ERROR during seeding:', error);
+      throw error; // Re-throw the error to be visible in the browser as a 500 error
+    }
   }
 
   getInbox(): MailEntity[] {
+    console.log('[API] Fetching inbox...');
     return this.db
       .prepare(`SELECT * FROM mail WHERE type = 'inbox' ORDER BY date DESC`)
       .all() as MailEntity[];

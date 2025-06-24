@@ -23,12 +23,18 @@
       class="q-mt-md"
       :loading="loading"
       :rows-per-page-options="[10, 20, 50]"
-      @row-click="onRowClick"
+      @row-click="handleRowClick"
+      header-class="bg-primary text-white"
     >
       <template v-slot:no-data>
-        <div class="full-width row flex-center text-grey q-gutter-sm q-py-lg">
-          <q-icon size="2em" :name="noDataIcon" />
-          <span>{{ noDataText }}</span>
+        <div class="full-width row flex-center text-grey q-gutter-sm q-py-xl">
+          <q-icon size="4em" :name="noDataIcon" />
+          <div class="text-center">
+            <div class="text-h6">{{ noDataText }}</div>
+            <div class="text-caption text-grey-7">
+              Попробуйте изменить фильтры или создать новое письмо.
+            </div>
+          </div>
         </div>
       </template>
       <slot name="body-cell-subject" />
@@ -52,4 +58,10 @@
     get: () => props.modelValue,
     set: value => emit('update:modelValue', value),
   })
+
+  const handleRowClick = (evt, row, index) => {
+    if (props.onRowClick) {
+      props.onRowClick(evt, row, index)
+    }
+  }
 </script>

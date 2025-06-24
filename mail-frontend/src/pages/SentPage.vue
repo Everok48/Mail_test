@@ -1,12 +1,23 @@
 <template>
   <q-page padding>
     <div class="row items-center justify-between q-mb-md">
-      <h1 class="text-h5">Отправленные</h1>
-      <q-btn icon="add" label="Новое письмо" color="primary" to="/create" />
+      <h1 class="text-h4">Отправленные</h1>
+      <div class="row q-gutter-sm">
+        <q-btn
+          icon="refresh"
+          round
+          dense
+          flat
+          color="primary"
+          @click="loadMails"
+          title="Обновить"
+        />
+        <q-btn icon="add" label="Новое письмо" color="primary" to="/create" />
+      </div>
     </div>
 
     <MailTable
-      v-model="searchText"
+      v-model="searchQuery"
       :rows="filteredMails"
       :columns="columns"
       :loading="isLoading"
@@ -22,8 +33,17 @@
       </template>
     </MailTable>
 
-    <q-dialog v-model="dialogOpen">
-      <MailDialog v-if="selectedMail" :mail="selectedMail" @delete="handleDelete" />
+    <q-banner v-if="error" class="bg-negative text-white q-mt-md">
+      {{ error }}
+    </q-banner>
+
+    <q-dialog v-model="showMailDialog">
+      <mail-dialog
+        v-if="currentMail"
+        :mail="currentMail"
+        @delete="handleDelete"
+        @close="closeMailDialog"
+      />
     </q-dialog>
   </q-page>
 </template>
@@ -33,66 +53,70 @@
   import { useMailStore } from 'src/stores/mail-store'
   import { storeToRefs } from 'pinia'
   import MailDialog from 'components/MailDialog.vue'
-  import { formatDate } from 'src/composables/useDateFormat'
+  import { formatDate } from 'src/helpers/useDateFormat'
   import MailTable from 'components/MailTable.vue'
   import { useQuasar } from 'quasar'
 
   const mailStore = useMailStore()
-  const { isLoading } = storeToRefs(mailStore)
-  const dialogOpen = ref(false)
-  const selectedMail = ref(null)
+  const { isLoading, error } = storeToRefs(mailStore)
+  const showMailDialog = ref(false)
+  const currentMail = ref(null)
   const $q = useQuasar()
 
   const columns = [
     { name: 'toEmail', label: 'Кому', align: 'left', field: 'toEmail' },
     { name: 'subject', label: 'Тема', align: 'left', field: 'subject' },
     { name: 'date', label: 'Дата', align: 'left', field: 'date', format: val => formatDate(val) },
-    { name: 'body', label: 'Текст письма', align: 'left', field: 'body' },
   ]
 
-  const searchText = computed({
+  const searchQuery = computed({
     get: () => mailStore.filters.searchQuery,
     set: value => mailStore.updateFilters({ searchQuery: value }),
   })
 
   const filteredMails = computed(() => mailStore.filteredMailsByType('sent'))
 
-  onMounted(async () => {
+  const loadMails = async () => {
     try {
       await mailStore.fetchMails('sent')
-    } catch (error) {
+    } catch (err) {
       $q.notify({
         type: 'negative',
-        position: 'top',
-        message: 'Не удалось загрузить письма',
-        caption: error.message,
-        timeout: 3000,
+        message: 'Не удалось загрузить отправленные',
+        caption: err.message,
       })
+    }
+  }
+
+  onMounted(() => {
+    if (filteredMails.value.length === 0) {
+      loadMails()
     }
   })
 
   function openMail(evt, row) {
-    selectedMail.value = row
-    dialogOpen.value = true
+    currentMail.value = row
+    showMailDialog.value = true
+  }
+
+  const closeMailDialog = () => {
+    showMailDialog.value = false
+    currentMail.value = null
   }
 
   async function handleDelete(id) {
     try {
       await mailStore.deleteMail(id, 'sent')
-      dialogOpen.value = false
+      closeMailDialog()
       $q.notify({
         type: 'positive',
-        position: 'top',
         message: 'Письмо удалено',
-        timeout: 2000,
       })
-    } catch (error) {
+    } catch (err) {
       $q.notify({
         type: 'negative',
-        position: 'top',
-        message: 'Не удалось удалить письмо',
-        caption: error.message,
-        timeout: 3000,
+        message: 'Ошибка удаления',
+        caption: err.message,
       })
     }
   }

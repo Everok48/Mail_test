@@ -15,6 +15,11 @@ import { ValidationPipe } from '@nestjs/common';
 export class MailController {
   constructor(private readonly mailService: MailService) {}
 
+  @Get('seed')
+  seedDatabase() {
+    return this.mailService.seed();
+  }
+
   @Get('inbox')
   getInbox(): MailEntity[] {
     return this.mailService.getInbox();

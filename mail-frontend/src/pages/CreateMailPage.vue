@@ -1,9 +1,12 @@
 <template>
   <q-page padding>
-    <div class="q-mx-auto" style="max-width: 700px">
-      <h1 class="text-h5 q-mb-md">Новое письмо</h1>
-      <q-card flat bordered class="q-pa-md">
-        <q-form @submit.prevent="sendMail" ref="mailForm" class="q-gutter-md">
+    <q-card flat bordered class="q-mx-auto q-pa-md" style="max-width: 700px">
+      <q-card-section>
+        <div class="text-h5 q-mb-md">Новое письмо</div>
+      </q-card-section>
+
+      <q-form @submit.prevent="sendMail" ref="mailForm" class="q-gutter-md">
+        <q-card-section>
           <q-input
             outlined
             v-model="mail.fromEmail"
@@ -50,21 +53,20 @@
           </q-input>
 
           <q-input outlined v-model="mail.body" type="textarea" label="Текст письма" rows="10" />
-
-          <div class="row q-gutter-sm justify-end">
-            <q-btn icon="arrow_back" label="Назад" color="grey" flat @click="goBack" />
-            <q-btn
-              icon="drafts"
-              label="Сохранить в черновики"
-              color="primary"
-              outline
-              @click="saveDraft"
-            />
-            <q-btn icon="send" label="Отправить" color="primary" type="submit" />
-          </div>
-        </q-form>
-      </q-card>
-    </div>
+        </q-card-section>
+        <q-card-actions align="right" class="q-gutter-sm">
+          <q-btn icon="arrow_back" label="Назад" color="grey" flat @click="goBack" />
+          <q-btn
+            icon="drafts"
+            label="Сохранить в черновики"
+            color="primary"
+            outline
+            @click="saveDraft"
+          />
+          <q-btn icon="send" label="Отправить" color="primary" type="submit" />
+        </q-card-actions>
+      </q-form>
+    </q-card>
   </q-page>
 </template>
 

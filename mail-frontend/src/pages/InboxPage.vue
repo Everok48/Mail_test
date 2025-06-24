@@ -1,49 +1,55 @@
 <template>
   <q-page padding>
-    <div class="q-pa-md">
-      <q-btn
-        icon="refresh"
-        label="Получить новые письма"
-        color="primary"
-        @click="loadMails"
-        class="q-mb-md"
-      />
-      <MailTable
-        v-model="searchQuery"
-        :rows="filteredMails"
-        :columns="columns"
-        :loading="isLoading"
-        :noDataIcon="'inbox'"
-        :noDataText="'Входящих писем пока нет'"
-        :onRowClick="openMail"
-      >
-        <template #body-cell-subject="props">
-          <q-td :props="props" class="cursor-pointer">
-            <span class="text-weight-bold">{{ props.row.subject }}</span>
-            <div class="text-grey-7 ellipsis">{{ props.row.body }}</div>
-          </q-td>
-        </template>
-      </MailTable>
-
-      <div v-if="isLoading" class="text-center q-pa-md">
-        <q-spinner color="primary" size="3em" />
+    <div class="row items-center justify-between q-mb-md">
+      <h1 class="text-h4">Входящие</h1>
+      <div class="row q-gutter-sm">
+        <q-btn
+          icon="refresh"
+          label="Получить новые письма"
+          color="primary"
+          outline
+          @click="loadMails"
+        />
+        <q-btn icon="add" label="Новое письмо" color="primary" to="/create" />
       </div>
-
-      <q-banner v-if="error" class="bg-negative text-white">
-        {{ error }}
-        <template v-slot:action>
-          <q-btn flat color="white" label="Повторить" @click="loadMails" />
-        </template>
-      </q-banner>
     </div>
 
-    <mail-dialog
-      v-if="currentMail"
-      v-model="showMailDialog"
-      :mail="currentMail"
-      @delete="handleDelete"
-      @close="closeMailDialog"
-    />
+    <MailTable
+      v-model="searchQuery"
+      :rows="filteredMails"
+      :columns="columns"
+      :loading="isLoading"
+      :noDataIcon="'inbox'"
+      :noDataText="'Входящих писем пока нет'"
+      :onRowClick="openMail"
+    >
+      <template #body-cell-subject="props">
+        <q-td :props="props" class="cursor-pointer">
+          <span class="text-weight-bold">{{ props.row.subject }}</span>
+          <div class="text-grey-7 ellipsis">{{ props.row.body }}</div>
+        </q-td>
+      </template>
+    </MailTable>
+
+    <div v-if="isLoading" class="text-center q-pa-md">
+      <q-spinner color="primary" size="3em" />
+    </div>
+
+    <q-banner v-if="error" class="bg-negative text-white">
+      {{ error }}
+      <template v-slot:action>
+        <q-btn flat color="white" label="Повторить" @click="loadMails" />
+      </template>
+    </q-banner>
+
+    <q-dialog v-model="showMailDialog">
+      <mail-dialog
+        v-if="currentMail"
+        :mail="currentMail"
+        @delete="handleDelete"
+        @close="closeMailDialog"
+      />
+    </q-dialog>
   </q-page>
 </template>
 
@@ -51,7 +57,7 @@
   import { ref, onMounted, computed } from 'vue'
   import { useMailStore } from 'src/stores/mail-store'
   import { storeToRefs } from 'pinia'
-  import { formatDate } from 'src/composables/useDateFormat'
+  import { formatDate } from 'src/helpers/useDateFormat'
   import MailDialog from 'src/components/MailDialog.vue'
   import MailTable from 'src/components/MailTable.vue'
   import { useQuasar } from 'quasar'
@@ -63,9 +69,22 @@
   const $q = useQuasar()
 
   const columns = [
-    { name: 'fromEmail', label: 'Отправитель', align: 'left', field: 'fromEmail' },
+    {
+      name: 'fromEmail',
+      label: 'Отправитель',
+      align: 'left',
+      field: 'fromEmail',
+      style: 'width: 250px',
+    },
     { name: 'subject', label: 'Тема', align: 'left', field: 'subject' },
-    { name: 'date', label: 'Дата', align: 'left', field: 'date', format: val => formatDate(val) },
+    {
+      name: 'date',
+      label: 'Дата',
+      align: 'right',
+      field: 'date',
+      format: val => formatDate(val),
+      style: 'width: 150px',
+    },
   ]
 
   const searchQuery = computed({
