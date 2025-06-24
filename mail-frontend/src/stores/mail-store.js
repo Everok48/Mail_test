@@ -6,7 +6,6 @@ export const useMailStore = defineStore('mail', {
     inboxMails: [],
     sentMails: [],
     drafts: [],
-    currentMail: null,
     isLoading: false,
     error: null,
     filters: {
@@ -37,7 +36,7 @@ export const useMailStore = defineStore('mail', {
           mail =>
             mail.subject?.toLowerCase().includes(query) ||
             mail.body?.toLowerCase().includes(query) ||
-            mail.from?.toLowerCase().includes(query)
+            mail.fromEmail?.toLowerCase().includes(query)
         )
       }
       filtered.sort((a, b) => new Date(b.date) - new Date(a.date))
@@ -46,15 +45,6 @@ export const useMailStore = defineStore('mail', {
     inboxCount: state => state.inboxMails.length,
     sentCount: state => state.sentMails.length,
     draftsCount: state => state.drafts.length,
-    getMailById:
-      state =>
-      (id, type = 'inbox') => {
-        let list = []
-        if (type === 'inbox') list = state.inboxMails
-        if (type === 'sent') list = state.sentMails
-        if (type === 'drafts') list = state.drafts
-        return list.find(mail => mail.id === id)
-      },
   },
 
   actions: {
@@ -134,18 +124,6 @@ export const useMailStore = defineStore('mail', {
 
     updateFilters(newFilters) {
       this.filters = { ...this.filters, ...newFilters }
-    },
-
-    resetStore() {
-      this.inboxMails = []
-      this.sentMails = []
-      this.drafts = []
-      this.currentMail = null
-      this.isLoading = false
-      this.error = null
-      this.filters = {
-        searchQuery: '',
-      }
     },
   },
 })

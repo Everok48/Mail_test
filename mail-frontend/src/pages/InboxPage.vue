@@ -63,7 +63,7 @@
   const $q = useQuasar()
 
   const columns = [
-    { name: 'from', label: 'Отправитель', align: 'left', field: 'from' },
+    { name: 'fromEmail', label: 'Отправитель', align: 'left', field: 'fromEmail' },
     { name: 'subject', label: 'Тема', align: 'left', field: 'subject' },
     { name: 'date', label: 'Дата', align: 'left', field: 'date', format: val => formatDate(val) },
   ]
