@@ -1,21 +1,23 @@
 <template>
-  <q-page padding>
-    <div class="row items-center justify-between q-mb-md">
-      <h1 class="text-h4">Отправленные</h1>
+  <q-page padding class="q-mx-auto" style="max-width: 1100px;">
+    <div class="row items-center justify-between q-mb-lg q-gutter-md">
+      <div class="row items-center q-gutter-md">
+        <q-icon name="send" size="32px" color="primary" />
+        <h1 class="text-h4 text-weight-bold q-mb-none">Отправленные</h1>
+      </div>
       <div class="row q-gutter-sm">
         <q-btn
           icon="refresh"
-          round
-          dense
-          flat
+          label="Обновить"
           color="primary"
+          outline
+          rounded
           @click="loadMails"
-          title="Обновить"
         />
-        <q-btn icon="add" label="Новое письмо" color="primary" to="/create" />
+        <q-btn icon="add" label="Новое письмо" color="primary" rounded to="/create" />
       </div>
     </div>
-
+    <q-separator spaced />
     <MailTable
       v-model="searchQuery"
       :rows="filteredMails"
@@ -32,11 +34,9 @@
         </q-td>
       </template>
     </MailTable>
-
     <q-banner v-if="error" class="bg-negative text-white q-mt-md">
       {{ error }}
     </q-banner>
-
     <q-dialog v-model="showMailDialog">
       <mail-dialog
         v-if="currentMail"
@@ -122,11 +122,8 @@
   }
 </script>
 
-<style>
-  .q-table tbody tr {
-    cursor: pointer;
-  }
-  .q-table tbody tr:hover {
-    background-color: #f5f5f5;
-  }
+<style scoped>
+h1 {
+  letter-spacing: -1px;
+}
 </style>

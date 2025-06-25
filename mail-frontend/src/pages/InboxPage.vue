@@ -1,19 +1,23 @@
 <template>
-  <q-page padding>
-    <div class="row items-center justify-between q-mb-md">
-      <h1 class="text-h4">Входящие</h1>
+  <q-page padding class="q-mx-auto" style="max-width: 1100px;">
+    <div class="row items-center justify-between q-mb-lg q-gutter-md">
+      <div class="row items-center q-gutter-md">
+        <q-icon name="inbox" size="32px" color="primary" />
+        <h1 class="text-h4 text-weight-bold q-mb-none">Входящие</h1>
+      </div>
       <div class="row q-gutter-sm">
         <q-btn
           icon="refresh"
           label="Получить новые письма"
           color="primary"
           outline
+          rounded
           @click="loadMails"
         />
-        <q-btn icon="add" label="Новое письмо" color="primary" to="/create" />
+        <q-btn icon="add" label="Новое письмо" color="primary" rounded to="/create" />
       </div>
     </div>
-
+    <q-separator spaced />
     <MailTable
       v-model="searchQuery"
       :rows="filteredMails"
@@ -30,18 +34,15 @@
         </q-td>
       </template>
     </MailTable>
-
     <div v-if="isLoading" class="text-center q-pa-md">
       <q-spinner color="primary" size="3em" />
     </div>
-
-    <q-banner v-if="error" class="bg-negative text-white">
+    <q-banner v-if="error" class="bg-negative text-white q-mt-md">
       {{ error }}
       <template v-slot:action>
         <q-btn flat color="white" label="Повторить" @click="loadMails" />
       </template>
     </q-banner>
-
     <q-dialog v-model="showMailDialog">
       <mail-dialog
         v-if="currentMail"
@@ -148,11 +149,15 @@
   onMounted(loadMails)
 </script>
 
-<style>
-  .q-table tbody tr {
-    cursor: pointer;
-  }
-  .q-table tbody tr:hover {
-    background-color: #f5f5f5;
-  }
+<style scoped>
+h1 {
+  letter-spacing: -1px;
+}
+
+.q-table tbody tr {
+  cursor: pointer;
+}
+.q-table tbody tr:hover {
+  background-color: #f5f5f5;
+}
 </style>

@@ -1,71 +1,33 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated class="bg-primary text-white">
+    <q-header elevated class="bg-primary text-white q-pa-sm shadow-2">
       <q-toolbar>
-        <q-btn dense flat round icon="menu" @click="toggleLeftDrawer" />
-        <q-toolbar-title>
-          <q-avatar>
-            <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg" />
-          </q-avatar>
-          Почта
+        <q-btn flat dense round icon="menu" @click="leftDrawerOpen = !leftDrawerOpen" aria-label="Меню" class="q-mr-md" />
+        <q-toolbar-title class="text-h5 text-weight-bold">
+          <q-icon name="mail" class="q-mr-sm" /> Почта
         </q-toolbar-title>
       </q-toolbar>
     </q-header>
 
-    <q-drawer show-if-above v-model="leftDrawerOpen" side="left" bordered>
-      <q-list>
-        <q-item-label header>Навигация</q-item-label>
-
-        <q-item to="/" clickable v-ripple>
-          <q-item-section avatar>
-            <q-icon name="inbox" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Входящие</q-item-label>
-          </q-item-section>
-          <q-item-section side>
-            <q-badge v-if="inboxCount > 0" color="primary" :label="inboxCount" />
-          </q-item-section>
-        </q-item>
-
-        <q-item to="/drafts" clickable v-ripple>
-          <q-item-section avatar>
-            <q-icon name="drafts" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Черновики</q-item-label>
-          </q-item-section>
-          <q-item-section side>
-            <q-badge v-if="draftsCount > 0" color="orange" :label="draftsCount" />
-          </q-item-section>
-        </q-item>
-
-        <q-item to="/sent" clickable v-ripple>
-          <q-item-section avatar>
-            <q-icon name="send" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Отправленные</q-item-label>
-          </q-item-section>
-          <q-item-section side>
-            <q-badge v-if="sentCount > 0" color="green" :label="sentCount" />
-          </q-item-section>
-        </q-item>
-
+    <q-drawer v-model="leftDrawerOpen" show-if-above bordered class="bg-grey-1">
+      <q-list padding class="q-pt-md">
+        <q-item-label header class="text-grey-7 q-mb-sm">Навигация</q-item-label>
         <q-separator spaced />
-
-        <q-item to="/create" clickable v-ripple>
+        <q-item v-for="link in links" :key="link.to" :to="link.to" clickable v-ripple active-class="bg-blue-2 text-primary" class="q-mb-xs q-pa-sm rounded-borders nav-link">
           <q-item-section avatar>
-            <q-icon name="edit" />
+            <q-icon :name="link.icon" size="md" />
           </q-item-section>
           <q-item-section>
-            <q-item-label>Создать письмо</q-item-label>
+            <q-item-label class="text-weight-medium">{{ link.label }}</q-item-label>
+          </q-item-section>
+          <q-item-section side v-if="link.count !== undefined && link.count > 0">
+            <q-badge color="primary" rounded>{{ link.count }}</q-badge>
           </q-item-section>
         </q-item>
       </q-list>
     </q-drawer>
 
-    <q-page-container>
+    <q-page-container class="bg-grey-2">
       <router-view />
     </q-page-container>
 
@@ -80,21 +42,67 @@
 </template>
 
 <script setup>
-  import { ref } from 'vue'
-  import { useMailStore } from 'src/stores/mail-store'
-  import { storeToRefs } from 'pinia'
+import { ref, computed } from 'vue'
+import { useMailStore } from 'src/stores/mail-store'
 
-  const leftDrawerOpen = ref(false)
-  const mailStore = useMailStore()
-  const { inboxCount, draftsCount, sentCount } = storeToRefs(mailStore)
+const leftDrawerOpen = ref(false)
+const mailStore = useMailStore()
 
-  function toggleLeftDrawer() {
-    leftDrawerOpen.value = !leftDrawerOpen.value
-  }
+const links = computed(() => [
+  {
+    label: 'Входящие',
+    icon: 'inbox',
+    to: '/',
+    count: mailStore.inboxCount,
+  },
+  {
+    label: 'Черновики',
+    icon: 'edit_note',
+    to: '/drafts',
+    count: mailStore.draftsCount,
+  },
+  {
+    label: 'Отправленные',
+    icon: 'send',
+    to: '/sent',
+    count: mailStore.sentCount,
+  },
+  {
+    label: 'Создать письмо',
+    icon: 'add_circle',
+    to: '/create',
+  },
+])
 </script>
 
-<style lang="scss">
-  .q-item.q-router-link--active {
-    color: $primary;
+<style scoped>
+.nav-link {
+  border-radius: 8px;
+  transition: background 0.2s, color 0.2s;
+}
+.nav-link:hover {
+  background: #e3f2fd;
+  color: #1976d2;
+}
+.q-drawer {
+  min-width: 220px;
+}
+</style>
+
+
+
+<style scoped>
+  .nav-link {
+    border-radius: 8px;
+    transition:
+      background 0.2s,
+      color 0.2s;
+  }
+  .nav-link:hover {
+    background: #e3f2fd;
+    color: #1976d2;
+  }
+  .q-drawer {
+    min-width: 220px;
   }
 </style>

@@ -8,6 +8,7 @@ import {
   UpdateMailDto,
   MailType,
 } from './dto/mail.dto';
+import { HttpException, HttpStatus } from '@nestjs/common';
 // @ts-ignore
 const DatabaseLib = require('better-sqlite3');
 
@@ -83,7 +84,7 @@ export class MailService implements OnModuleInit {
       };
     } catch (error) {
       console.error('[SEED] CRITICAL ERROR during seeding:', error);
-      throw error; // Re-throw the error to be visible in the browser as a 500 error
+      throw error;
     }
   }
 
@@ -107,54 +108,85 @@ export class MailService implements OnModuleInit {
   }
 
   getById(id: number): MailEntity | undefined {
-    return this.db.prepare(`SELECT * FROM mail WHERE id = ?`).get(id) as
+    const mail = this.db.prepare(`SELECT * FROM mail WHERE id = ?`).get(id) as
       | MailEntity
       | undefined;
+    if (!mail) {
+      throw new HttpException('Письмо не найдено', HttpStatus.NOT_FOUND);
+    }
+    return mail;
   }
 
   create(mail: CreateMailDto): MailEntity {
-    const stmt = this.db.prepare(
-      `INSERT INTO mail (fromEmail, toEmail, subject, body, date, type) VALUES (?, ?, ?, ?, ?, ?)`,
-    );
-    const info = stmt.run(
-      mail.fromEmail,
-      mail.toEmail,
-      mail.subject,
-      mail.body,
-      mail.date || new Date().toISOString(),
-      mail.type || MailType.INBOX,
-    );
-    return {
-      id: Number(info.lastInsertRowid),
-      ...mail,
-      date: mail.date || new Date().toISOString(),
-    };
+    try {
+      const stmt = this.db.prepare(
+        `INSERT INTO mail (fromEmail, toEmail, subject, body, date, type) VALUES (?, ?, ?, ?, ?, ?)`,
+      );
+      const info = stmt.run(
+        mail.fromEmail,
+        mail.toEmail,
+        mail.subject,
+        mail.body,
+        mail.date || new Date().toISOString(),
+        mail.type || MailType.INBOX,
+      );
+      return {
+        id: Number(info.lastInsertRowid),
+        ...mail,
+        date: mail.date || new Date().toISOString(),
+      };
+    } catch (error) {
+      throw new HttpException(
+        'Ошибка создания письма',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   update(id: number, mail: UpdateMailDto): MailEntity | undefined {
     const oldMail = this.getById(id);
-    if (!oldMail) return undefined;
-    const updated: MailEntity = {
-      ...oldMail,
-      ...mail,
-      date: mail.date || new Date().toISOString(),
-    };
-    const stmt = this.db.prepare(
-      `UPDATE mail SET fromEmail = ?, toEmail = ?, subject = ?, body = ?, date = ?, type = ? WHERE id = ?`,
-    );
-    stmt.run(
-      updated.fromEmail,
-      updated.toEmail,
-      updated.subject,
-      updated.body,
-      updated.date,
-      updated.type,
-      id,
-    );
-    return updated;
+    if (!oldMail) {
+      throw new HttpException('Письмо не найдено', HttpStatus.NOT_FOUND);
+    }
+    try {
+      const updated: MailEntity = {
+        ...oldMail,
+        ...mail,
+        date: mail.date || new Date().toISOString(),
+      };
+      const stmt = this.db.prepare(
+        `UPDATE mail SET fromEmail = ?, toEmail = ?, subject = ?, body = ?, date = ?, type = ? WHERE id = ?`,
+      );
+      stmt.run(
+        updated.fromEmail,
+        updated.toEmail,
+        updated.subject,
+        updated.body,
+        updated.date,
+        updated.type,
+        id,
+      );
+      return updated;
+    } catch (error) {
+      throw new HttpException(
+        'Ошибка обновления письма',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 
   delete(id: number): void {
-    this.db.prepare(`DELETE FROM mail WHERE id = ?`).run(id);
+    const mail = this.getById(id);
+    if (!mail) {
+      throw new HttpException('Письмо не найдено', HttpStatus.NOT_FOUND);
+    }
+    try {
+      this.db.prepare(`DELETE FROM mail WHERE id = ?`).run(id);
+    } catch (error) {
+      throw new HttpException(
+        'Ошибка удаления письма',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
   }
 }

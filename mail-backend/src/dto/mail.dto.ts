@@ -28,13 +28,10 @@ export class CreateMailDto {
   @IsNotEmpty()
   fromEmail!: string;
 
-  @Transform(({ value }) => (value === '' ? null : value))
-  @IsOptional()
   @IsEmail()
+  @IsNotEmpty()
   toEmail!: string;
 
-  @Transform(({ value }) => (value === '' ? null : value))
-  @IsOptional()
   @IsString()
   @IsNotEmpty()
   subject!: string;

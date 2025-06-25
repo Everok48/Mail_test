@@ -84,11 +84,19 @@ export const useMailStore = defineStore('mail', {
       this.isLoading = true
       this.error = null
       try {
+        const cleanDraft = {
+          fromEmail: draft.fromEmail?.trim() || undefined,
+          toEmail: draft.toEmail?.trim() || undefined,
+          subject: draft.subject?.trim() || undefined,
+          body: draft.body?.trim() || undefined,
+          type: 'draft',
+          date: draft.date || new Date().toISOString(),
+        }
         let response
         if (draft.id) {
-          response = await api.put(`/mails/${draft.id}`, draft)
+          response = await api.put(`/mails/${draft.id}`, cleanDraft)
         } else {
-          response = await api.post('/mails', { ...draft, type: 'draft' })
+          response = await api.post('/mails', cleanDraft)
         }
         const savedDraft = response.data
         const idx = this.drafts.findIndex(d => d.id === savedDraft.id)

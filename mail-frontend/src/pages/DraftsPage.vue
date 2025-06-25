@@ -1,21 +1,16 @@
 <template>
-  <q-page padding>
-    <div class="row items-center justify-between q-mb-md">
-      <h1 class="text-h4">Черновики</h1>
+  <q-page padding class="q-mx-auto" style="max-width: 1100px">
+    <div class="row items-center justify-between q-mb-lg q-gutter-md">
+      <div class="row items-center q-gutter-md">
+        <q-icon name="edit_note" size="32px" color="primary" />
+        <h1 class="text-h4 text-weight-bold q-mb-none">Черновики</h1>
+      </div>
       <div class="row q-gutter-sm">
-        <q-btn
-          icon="refresh"
-          round
-          dense
-          flat
-          color="primary"
-          @click="loadMails"
-          title="Обновить"
-        />
-        <q-btn icon="add" label="Новое письмо" color="primary" to="/create" />
+        <q-btn icon="refresh" label="Обновить" color="primary" outline rounded @click="loadMails" />
+        <q-btn icon="add" label="Новое письмо" color="primary" rounded to="/create" />
       </div>
     </div>
-
+    <q-separator spaced />
     <MailTable
       v-model="searchQuery"
       :rows="filteredMails"
@@ -32,17 +27,17 @@
         </q-td>
       </template>
     </MailTable>
-
     <q-banner v-if="error" class="bg-negative text-white q-mt-md">
       {{ error }}
     </q-banner>
-
     <q-dialog v-model="showMailDialog">
       <mail-dialog
         v-if="currentMail"
         :mail="currentMail"
+        mode="draft"
         @delete="handleDelete"
         @close="closeMailDialog"
+        @save="handleSave"
       />
     </q-dialog>
   </q-page>
@@ -103,7 +98,6 @@
   }
 
   onMounted(() => {
-    // Загружаем письма, только если их еще нет в сторе
     if (mailStore.drafts.length === 0) {
       loadMails()
     }
@@ -138,9 +132,33 @@
       })
     }
   }
+
+  async function handleSave(updatedMail) {
+    try {
+      await mailStore.saveDraft(updatedMail)
+      $q.notify({
+        type: 'positive',
+        position: 'top',
+        message: 'Черновик обновлён',
+        timeout: 2000,
+      })
+      closeMailDialog()
+    } catch (e) {
+      $q.notify({
+        type: 'negative',
+        position: 'top',
+        message: 'Ошибка сохранения черновика',
+        caption: e.message,
+      })
+    }
+  }
 </script>
 
-<style>
+<style scoped>
+  h1 {
+    letter-spacing: -1px;
+  }
+
   .q-table tbody tr {
     cursor: pointer;
   }
