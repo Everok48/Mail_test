@@ -88,23 +88,14 @@ export class MailService implements OnModuleInit {
     }
   }
 
-  getInbox(): MailEntity[] {
-    console.log('[API] Fetching inbox...');
+  getByType(type: MailType): MailEntity[] {
+    const validTypes = Object.values(MailType);
+    if (!validTypes.includes(type)) {
+      throw new HttpException('Неверный тип почты', HttpStatus.BAD_REQUEST);
+    }
     return this.db
-      .prepare(`SELECT * FROM mail WHERE type = 'inbox' ORDER BY date DESC`)
-      .all() as MailEntity[];
-  }
-
-  getSent(): MailEntity[] {
-    return this.db
-      .prepare(`SELECT * FROM mail WHERE type = 'sent' ORDER BY date DESC`)
-      .all() as MailEntity[];
-  }
-
-  getDrafts(): MailEntity[] {
-    return this.db
-      .prepare(`SELECT * FROM mail WHERE type = 'draft' ORDER BY date DESC`)
-      .all() as MailEntity[];
+      .prepare(`SELECT * FROM mail WHERE type = ? ORDER BY date DESC`)
+      .all(type) as MailEntity[];
   }
 
   getById(id: number): MailEntity | undefined {

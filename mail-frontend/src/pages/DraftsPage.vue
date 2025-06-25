@@ -6,7 +6,9 @@
         <h1 class="text-h4 text-weight-bold q-mb-none">Черновики</h1>
       </div>
       <div class="row q-gutter-sm">
-        <q-btn icon="refresh" label="Обновить" color="primary" outline rounded @click="loadMails" />
+        <q-btn icon="refresh" label="Обновить" color="primary" outline rounded @click="loadMails">
+          <q-tooltip>Обновить черновики</q-tooltip>
+        </q-btn>
         <q-btn icon="add" label="Новое письмо" color="primary" rounded to="/create" />
       </div>
     </div>
@@ -14,19 +16,11 @@
     <MailTable
       v-model="searchQuery"
       :rows="filteredMails"
-      :columns="columns"
       :loading="isLoading"
       :noDataIcon="'drafts'"
       :noDataText="'Черновиков пока нет'"
       :onRowClick="openMail"
-    >
-      <template #body-cell-subject="props">
-        <q-td :props="props" class="cursor-pointer">
-          <span class="text-weight-bold">{{ props.row.subject || '(Без темы)' }}</span>
-          <div class="text-grey-7 ellipsis">{{ props.row.body }}</div>
-        </q-td>
-      </template>
-    </MailTable>
+    />
     <q-banner v-if="error" class="bg-negative text-white q-mt-md">
       {{ error }}
     </q-banner>
@@ -65,25 +59,6 @@
     set: val => mailStore.updateFilters({ searchQuery: val }),
   })
 
-  const columns = [
-    {
-      name: 'toEmail',
-      label: 'Кому',
-      align: 'left',
-      field: 'toEmail',
-      style: 'width: 250px',
-    },
-    { name: 'subject', label: 'Тема', align: 'left', field: 'subject' },
-    {
-      name: 'date',
-      label: 'Дата',
-      align: 'right',
-      field: 'date',
-      format: val => formatDate(val),
-      style: 'width: 150px',
-    },
-  ]
-
   const loadMails = async () => {
     try {
       await mailStore.fetchMails('drafts')
@@ -98,7 +73,7 @@
   }
 
   onMounted(() => {
-    if (mailStore.drafts.length === 0) {
+    if (mailStore.mails.drafts.length === 0) {
       loadMails()
     }
   })
@@ -157,12 +132,5 @@
 <style scoped>
   h1 {
     letter-spacing: -1px;
-  }
-
-  .q-table tbody tr {
-    cursor: pointer;
-  }
-  .q-table tbody tr:hover {
-    background-color: #f5f5f5;
   }
 </style>

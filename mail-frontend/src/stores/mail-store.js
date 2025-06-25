@@ -3,9 +3,11 @@ import { api } from 'src/boot/axios'
 
 export const useMailStore = defineStore('mail', {
   state: () => ({
-    inboxMails: [],
-    sentMails: [],
-    drafts: [],
+    mails: {
+      inbox: [],
+      sent: [],
+      drafts: [],
+    },
     isLoading: false,
     error: null,
     filters: {
@@ -15,20 +17,7 @@ export const useMailStore = defineStore('mail', {
 
   getters: {
     filteredMailsByType: state => type => {
-      let mails = []
-      switch (type) {
-        case 'inbox':
-          mails = state.inboxMails
-          break
-        case 'sent':
-          mails = state.sentMails
-          break
-        case 'drafts':
-          mails = state.drafts
-          break
-        default:
-          return []
-      }
+      const mails = state.mails[type] || []
       let filtered = [...mails]
       if (state.filters.searchQuery) {
         const query = state.filters.searchQuery.toLowerCase()
@@ -42,9 +31,9 @@ export const useMailStore = defineStore('mail', {
       filtered.sort((a, b) => new Date(b.date) - new Date(a.date))
       return filtered
     },
-    inboxCount: state => state.inboxMails.length,
-    sentCount: state => state.sentMails.length,
-    draftsCount: state => state.drafts.length,
+    inboxCount: state => state.mails.inbox.length,
+    sentCount: state => state.mails.sent.length,
+    draftsCount: state => state.mails.drafts.length,
   },
 
   actions: {
@@ -53,9 +42,7 @@ export const useMailStore = defineStore('mail', {
       this.error = null
       try {
         const { data } = await api.get(`/mails/${type}`)
-        if (type === 'inbox') this.inboxMails = data
-        if (type === 'sent') this.sentMails = data
-        if (type === 'drafts') this.drafts = data
+        this.mails[type] = data
       } catch (error) {
         this.error = `Ошибка загрузки писем (${type}): ${error.message}`
         throw error
@@ -69,9 +56,9 @@ export const useMailStore = defineStore('mail', {
       this.error = null
       try {
         await api.delete(`/mails/${mailId}`)
-        if (type === 'inbox') this.inboxMails = this.inboxMails.filter(mail => mail.id !== mailId)
-        if (type === 'sent') this.sentMails = this.sentMails.filter(mail => mail.id !== mailId)
-        if (type === 'drafts') this.drafts = this.drafts.filter(mail => mail.id !== mailId)
+        if (this.mails[type]) {
+          this.mails[type] = this.mails[type].filter(mail => mail.id !== mailId)
+        }
       } catch (error) {
         this.error = `Ошибка удаления письма (${type}): ${error.message}`
         throw error
@@ -99,9 +86,12 @@ export const useMailStore = defineStore('mail', {
           response = await api.post('/mails', cleanDraft)
         }
         const savedDraft = response.data
-        const idx = this.drafts.findIndex(d => d.id === savedDraft.id)
-        if (idx !== -1) this.drafts[idx] = savedDraft
-        else this.drafts.unshift(savedDraft)
+        const idx = this.mails.drafts.findIndex(d => d.id === savedDraft.id)
+        if (idx !== -1) {
+          this.mails.drafts[idx] = savedDraft
+        } else {
+          this.mails.drafts.unshift(savedDraft)
+        }
         return savedDraft
       } catch (error) {
         this.error = `Ошибка сохранения черновика: ${error.message}`
@@ -116,9 +106,9 @@ export const useMailStore = defineStore('mail', {
       this.error = null
       try {
         const { data: sentMail } = await api.post('/mails', { ...mail, type: 'sent' })
-        this.sentMails.unshift(sentMail)
+        this.mails.sent.unshift(sentMail)
         if (mail.id) {
-          this.drafts = this.drafts.filter(d => d.id !== mail.id)
+          this.mails.drafts = this.mails.drafts.filter(d => d.id !== mail.id)
           await api.delete(`/mails/${mail.id}`)
         }
         return sentMail

@@ -6,9 +6,15 @@ import {
   Delete,
   Param,
   Body,
+  Query,
 } from '@nestjs/common';
 import { MailService } from './mail.service';
-import { CreateMailDto, UpdateMailDto, MailEntity } from './dto/mail.dto';
+import {
+  CreateMailDto,
+  UpdateMailDto,
+  MailEntity,
+  MailType,
+} from './dto/mail.dto';
 import { ValidationPipe } from '@nestjs/common';
 
 @Controller('mails')
@@ -22,17 +28,22 @@ export class MailController {
 
   @Get('inbox')
   getInbox(): MailEntity[] {
-    return this.mailService.getInbox();
+    return this.mailService.getByType(MailType.INBOX);
   }
 
   @Get('sent')
   getSent(): MailEntity[] {
-    return this.mailService.getSent();
+    return this.mailService.getByType(MailType.SENT);
   }
 
   @Get('drafts')
   getDrafts(): MailEntity[] {
-    return this.mailService.getDrafts();
+    return this.mailService.getByType(MailType.DRAFT);
+  }
+
+  @Get()
+  getMailsByType(@Query('type') type: MailType): MailEntity[] {
+    return this.mailService.getByType(type);
   }
 
   @Get(':id')

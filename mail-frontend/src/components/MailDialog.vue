@@ -143,21 +143,4 @@
 </script>
 
 <style scoped>
-  .mail-dialog-card {
-    min-width: 350px;
-    max-width: 500px;
-  }
-  .mail-dialog-title {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 10px;
-  }
-  .mail-dialog-info {
-    font-size: 14px;
-    margin-bottom: 10px;
-  }
-  .mail-dialog-body {
-    margin-top: 10px;
-    font-size: 16px;
-  }
 </style>

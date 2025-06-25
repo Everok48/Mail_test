@@ -3,7 +3,7 @@ const { configure } = require('quasar/wrappers')
 
 module.exports = configure(function (/* ctx */) {
   return {
-    css: ['app.scss'],
+    css: [],
     boot: ['axios'],
     extras: ['roboto-font', 'material-icons'],
     build: {
@@ -14,7 +14,7 @@ module.exports = configure(function (/* ctx */) {
     },
     framework: {
       config: {},
-      plugins: ['Notify'],
+      plugins: ['Notify', 'Dark', 'LocalStorage'],
     },
   }
 })
