@@ -37,53 +37,46 @@ export class MailService implements OnModuleInit {
 
   seed() {
     try {
-      console.log('[SEED] Starting database seeding...');
       this.db.exec(this.createTableStmt);
-      console.log('[SEED] Table ensured to exist.');
-
       const insertStmt = this.db.prepare(
         `INSERT INTO mail (fromEmail, toEmail, subject, body, date, type) VALUES (?, ?, ?, ?, ?, ?)`,
       );
-
       const seedTransaction = this.db.transaction(() => {
-        const deleteInfo = this.db.prepare(`DELETE FROM mail`).run();
-        console.log(`[SEED] Deleted ${deleteInfo.changes} existing rows.`);
-
-        let insertedCount = 0;
-        const runInsert = (type, body = faker.lorem.paragraphs()) => {
-          const from =
-            type === MailType.SENT ? 'me@example.com' : faker.internet.email();
-          const to =
-            type === MailType.SENT ? faker.internet.email() : 'me@example.com';
-          const info = insertStmt.run(
-            from,
-            to,
+        this.db.prepare(`DELETE FROM mail`).run();
+        for (let i = 0; i < 15; i++) {
+          insertStmt.run(
+            faker.internet.email(),
+            'me@example.com',
             faker.lorem.sentence(),
-            body,
+            faker.lorem.paragraphs(),
             faker.date.recent().toISOString(),
-            type,
+            MailType.INBOX,
           );
-          if (info.changes > 0) insertedCount++;
-        };
-
-        for (let i = 0; i < 15; i++) runInsert(MailType.INBOX);
-        for (let i = 0; i < 10; i++) runInsert(MailType.SENT);
-        for (let i = 0; i < 5; i++) runInsert(MailType.DRAFT, '');
-
-        console.log(
-          `[SEED] Attempted to insert 30 rows. Successful inserts: ${insertedCount}`,
-        );
+        }
+        for (let i = 0; i < 10; i++) {
+          insertStmt.run(
+            'me@example.com',
+            faker.internet.email(),
+            faker.lorem.sentence(),
+            faker.lorem.paragraphs(),
+            faker.date.recent().toISOString(),
+            MailType.SENT,
+          );
+        }
+        for (let i = 0; i < 5; i++) {
+          insertStmt.run(
+            'me@example.com',
+            faker.internet.email(),
+            Math.random() > 0.5 ? '' : 'Черновик',
+            faker.lorem.paragraphs(),
+            faker.date.recent().toISOString(),
+            MailType.DRAFT,
+          );
+        }
       });
-
       seedTransaction();
-
-      console.log('[SEED] Seeding transaction completed.');
-      return {
-        message:
-          'Database seeding process finished. Check server console for details.',
-      };
+      return { message: 'Database seeding process finished.' };
     } catch (error) {
-      console.error('[SEED] CRITICAL ERROR during seeding:', error);
       throw error;
     }
   }
@@ -179,5 +172,38 @@ export class MailService implements OnModuleInit {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  generateFakeIncoming(count: number = 2): MailEntity[] {
+    const insertStmt = this.db.prepare(
+      `INSERT INTO mail (fromEmail, toEmail, subject, body, date, type) VALUES (?, ?, ?, ?, ?, ?)`,
+    );
+    const newMails: MailEntity[] = [];
+    for (let i = 0; i < count; i++) {
+      const fromEmail = faker.internet.email();
+      const toEmail = 'me@example.com';
+      const subject = faker.lorem.sentence();
+      const body = faker.lorem.paragraphs();
+      const date = new Date().toISOString();
+      const type = MailType.INBOX;
+      const info = insertStmt.run(
+        fromEmail,
+        toEmail,
+        subject,
+        body,
+        date,
+        type,
+      );
+      newMails.push({
+        id: Number(info.lastInsertRowid),
+        fromEmail,
+        toEmail,
+        subject,
+        body,
+        date,
+        type,
+      });
+    }
+    return newMails;
   }
 }

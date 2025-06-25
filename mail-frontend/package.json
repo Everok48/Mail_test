@@ -5,6 +5,7 @@
   "productName": "Medsoft test",
   "author": "Ever <everok2008@gmail.com>",
   "private": true,
+  "type": "module",
   "scripts": {
     "lint": "eslint -c ./eslint.config.js \"./src*/**/*.{js,cjs,mjs,vue}\"",
     "format": "prettier --write \"**/*.{js,vue,scss,html,md,json}\" --ignore-path .gitignore",

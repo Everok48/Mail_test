@@ -68,4 +68,10 @@ export class MailController {
   delete(@Param('id') id: string): void {
     return this.mailService.delete(Number(id));
   }
+
+  @Post('fake-incoming')
+  generateFakeIncoming(@Query('count') count?: string) {
+    const num = count ? parseInt(count, 10) : 2;
+    return this.mailService.generateFakeIncoming(num);
+  }
 }

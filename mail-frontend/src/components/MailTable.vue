@@ -96,7 +96,7 @@
 
   const props = defineProps({
     rows: Array,
-    columns: Array, // Оставляем для совместимости, но не используем
+    columns: Array, 
     loading: Boolean,
     modelValue: String,
     noDataIcon: { type: String, default: 'inbox_archive' },

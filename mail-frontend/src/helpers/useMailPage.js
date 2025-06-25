@@ -92,6 +92,10 @@ export function useMailPage(mailType) {
 
   const loadMails = async () => {
     try {
+      if (mailType === 'inbox') {
+        // Сначала сгенерировать новые входящие письма
+        await fetch('/api/mails/fake-incoming', { method: 'POST' })
+      }
       await mailStore.fetchMails(mailType)
       $q.notify({
         type: 'positive',

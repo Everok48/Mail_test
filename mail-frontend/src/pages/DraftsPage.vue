@@ -32,6 +32,7 @@
         @delete="handleDelete"
         @close="closeMailDialog"
         @save="handleSave"
+        @send="handleSend"
       />
     </q-dialog>
   </q-page>
@@ -44,7 +45,6 @@
   import MailDialog from 'components/MailDialog.vue'
   import MailTable from 'components/MailTable.vue'
   import { useQuasar } from 'quasar'
-  import { formatDate } from 'src/helpers/useDateFormat'
 
   const mailStore = useMailStore()
   const { isLoading, error } = storeToRefs(mailStore)
@@ -123,6 +123,28 @@
         type: 'negative',
         position: 'top',
         message: 'Ошибка сохранения черновика',
+        caption: e.message,
+      })
+    }
+  }
+
+  async function handleSend(mail) {
+    try {
+      await mailStore.sendMail(mail)
+      await mailStore.fetchMails('drafts')
+      await mailStore.fetchMails('sent')
+      $q.notify({
+        type: 'positive',
+        position: 'top',
+        message: 'Письмо отправлено',
+        timeout: 2000,
+      })
+      closeMailDialog()
+    } catch (e) {
+      $q.notify({
+        type: 'negative',
+        position: 'top',
+        message: 'Ошибка отправки письма',
         caption: e.message,
       })
     }

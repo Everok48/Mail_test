@@ -90,6 +90,7 @@
       <q-btn flat label="Удалить" color="negative" @click="onDelete" />
       <q-btn flat label="Назад" color="primary" v-close-popup />
       <q-btn v-if="isDraft" flat label="Сохранить" color="primary" @click="validateAndSave" />
+      <q-btn v-if="isDraft" flat label="Отправить" color="positive" @click="validateAndSend" />
     </q-card-actions>
   </q-card>
 </template>
@@ -105,11 +106,11 @@
     },
     mode: {
       type: String,
-      default: '', // 'draft', 'inbox', 'sent'
+      default: '', 
     },
   })
 
-  const emit = defineEmits(['delete', 'save'])
+  const emit = defineEmits(['delete', 'save', 'send'])
 
   const isDraft = computed(() => props.mode === 'draft' || props.mail.type === 'draft')
 
@@ -133,11 +134,19 @@
   }
 
   const validateAndSave = async () => {
-    // Проверяем обе формы (основные поля и body)
+   
     const validMain = (await editForm.value?.validate?.()) ?? true
     const validBody = (await editFormBody.value?.validate?.()) ?? true
     if (validMain && validBody) {
       onSave()
+    }
+  }
+
+  const validateAndSend = async () => {
+    const validMain = (await editForm.value?.validate?.()) ?? true
+    const validBody = (await editFormBody.value?.validate?.()) ?? true
+    if (validMain && validBody) {
+      emit('send', { ...editMail.value })
     }
   }
 </script>

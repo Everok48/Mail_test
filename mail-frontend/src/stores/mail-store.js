@@ -105,7 +105,9 @@ export const useMailStore = defineStore('mail', {
       this.isLoading = true
       this.error = null
       try {
-        const { data: sentMail } = await api.post('/mails', { ...mail, type: 'sent' })
+        const mailToSend = { ...mail, type: 'sent' }
+        delete mailToSend.id
+        const { data: sentMail } = await api.post('/mails', mailToSend)
         this.mails.sent.unshift(sentMail)
         if (mail.id) {
           this.mails.drafts = this.mails.drafts.filter(d => d.id !== mail.id)
