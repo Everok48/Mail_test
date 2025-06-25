@@ -2,8 +2,14 @@ import InboxPage from 'pages/InboxPage.vue'
 import DraftsPage from 'pages/DraftsPage.vue'
 import SentPage from 'pages/SentPage.vue'
 import CreateMailPage from 'pages/CreateMailPage.vue'
+import LoginPage from 'pages/LoginPage.vue'
 
 const routes = [
+  {
+    path: '/login',
+    name: 'login',
+    component: LoginPage,
+  },
   {
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
