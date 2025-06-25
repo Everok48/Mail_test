@@ -42,10 +42,6 @@
         class="full-width row flex-center text-grey-7 q-gutter-sm q-py-xl"
       >
         <q-icon size="4em" :name="noDataIcon" />
-        <div class="text-center">
-          <div class="text-h6">{{ noDataText }}</div>
-          <div class="text-caption">Попробуйте изменить фильтры или создать новое письмо.</div>
-        </div>
       </div>
 
       <q-list v-else class="mail-list" separator>
@@ -96,7 +92,7 @@
 
   const props = defineProps({
     rows: Array,
-    columns: Array, 
+    columns: Array,
     loading: Boolean,
     modelValue: String,
     noDataIcon: { type: String, default: 'inbox_archive' },
