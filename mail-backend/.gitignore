@@ -1,55 +1,42 @@
 
-/dist
-/node_modules
-/build
+.DS_Store
+.thumbs.db
 
 
-logs
-*.log
+node_modules/
 npm-debug.log*
-pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
-
-.DS_Store
+.pnpm-store/
 
 
-/coverage
-/.nyc_output
+.quasar/
+dist/
+quasar.config.*
+src-cordova/node_modules/
+src-cordova/platforms/
+src-cordova/plugins/
+src-cordova/www/
+src-capacitor/www/
+src-capacitor/node_modules/
+src-electron/
+src-pwa/
 
 
-/.idea
-.project
-.classpath
-.c9/
-*.launch
-.settings/
-*.sublime-workspace
-
-
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 
 
 .env
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
 .env.local
 
 
-.temp
-.tmp
-
-
-pids
-*.pid
-*.seed
-*.pid.lock
-
-
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+coverage/
+.nyc_output/
+.cache/
